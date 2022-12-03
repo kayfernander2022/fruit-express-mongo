@@ -21,6 +21,7 @@ mongoose.connection.on('open', () => {
         Fruit.create(startingFruits, (err, data) =>{
 
             console.log(data)
+            mongoose.connection.close(); //so we do not have to control c in this situation
             
         })
 

@@ -1,61 +1,67 @@
-const express = require('express') // bring this in so we can make our router
+const express = require('express') 
 const Fruit = require('../models/fruit')
 
 
-/////
-// Create Router  variable to attach rooutes
-/////
-
-const router = express.Router() // router will have all routes attached to it
 
 
-//////////////////////////////////////////////
-//////// Actual Routes
-///////////////////////////////////////////////
+const router = express.Router() 
 
 
-router.get('/seed', (req, res) => {
 
+
+
+router.use((req, res, next) => {
+    if (req.session.loggedIn) {
+next();
+} else {
     
+        res.redirect("/user/login");
+}
+    });
 
-})
 
+//Index
 router.get('/', (req, res) => {
 
-    // Get all fruits from mongo and send them back
-    Fruit.find({})
-    .then((fruits) => {
-        // res.json(fruits)
-        res.render('fruits/index.ejs', { fruits })
-    })
-    .catch(err => console.log(err))
+    Fruit.find({username: req.session.username}, (err, fruits, ) => {
 
+        // res.json(fruits)
+        res.render('fruits/index.ejs', { fruits, user:req.session.username })
+    })
+    
 })
 
+//New
 router.get('/new', (req, res) => {
     res.render('fruits/new.ejs')
 })
 
+
+//Create
 router.post('/', (req, res) => {
     
-    req.body.readyToEat = req.body.readyToEat === 'on' ? true : false
+req.body.readyToEat = req.body.readyToEat === 'on' ? true : false
+req.body.username = req.session.username
 
     Fruit.create(req.body, (err, createdFruit) =>{
         console.log('created' , createdFruit, err)
         res.redirect('/fruits')
     })
-} )
+})
 
+
+//Edit
 router.get('/:id/edit', (req, res) => {
 
     const id = req.params.id
-    // Find the fruit and send it to the edit.ejs  to prepopulate the form
     Fruit.findById(id, (err, foundFruit) => {
-        // res.json(foundFruit)
+        
         res.render('fruits/edit.ejs', { fruit: foundFruit })
     })
 })
 
+
+//Update
 router.put('/:id', (req, res) => {
     
     req.body.readyToEat = req.body.readyToEat === 'on' ? true : false
@@ -68,15 +74,19 @@ router.put('/:id', (req, res) => {
     })
 })
 
+
+//Show
 router.get('/:id', (req, res)=>{
 
-    // Go and get fruit from the database
     Fruit.findById(req.params.id)
     .then((fruit)=> {
         res.render('fruits/show.ejs', {fruit})
     })
 })
 
+
+
+//Delete
 router.delete('/:id', async (req, res) => {
 
     // Method 1
